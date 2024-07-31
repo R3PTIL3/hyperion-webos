@@ -285,7 +285,7 @@ int capture_acquire_frame(void* state, frame_info_t* frame)
         }
     }
 
-    frame->pixel_format = PIXFMT_UNKNOWN;
+    frame->pixel_format = PIXFMT_YUV420_SEMI_PLANAR; // ToDo: I guess?!
     frame->width = self->width;
     frame->height = self->height;
     frame->planes[0].buffer = buff.start_addr0;
