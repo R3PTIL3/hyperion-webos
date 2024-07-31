@@ -2,8 +2,8 @@
 #include <stdlib.h> // calloc()
 #include <unistd.h> // usleep()
 
-#include <sys/stat.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 #include <fcntl.h>
 #include <sys/ioctl.h> //ioctl
@@ -203,7 +203,8 @@ int capture_terminate(void* state)
     return 0;
 }
 
-int check_file_flag(const char* flag_path) {
+int check_file_flag(const char* flag_path) 
+{
     struct stat buffer;
     return (stat(flag_path, &buffer) == 0);
 }
@@ -212,7 +213,7 @@ int capture_acquire_frame(void* state, frame_info_t* frame)
 {
     static int frame_count = 0;
     static int recording_started = 0;
-    const int max_frames_to_save = 50; // Set this value according to the needed amount of data for analysis
+    const int max_frames_to_save = 2; // Set this value according to the needed amount of data for analysis
     const char* flag_path = "/tmp/start_recording.flag"; // Flag file to start recording
     const char* log_file_path = "/tmp/captured_video_info.log"; // Log file for video stream information
     vtcapture_backend_state_t* self = (vtcapture_backend_state_t*)state;
@@ -223,16 +224,6 @@ int capture_acquire_frame(void* state, frame_info_t* frame)
     if (!recording_started && check_file_flag(flag_path)) {
         recording_started = 1;
         INFO("Recording started by flag.");
-
-        // Open log file to write video stream information
-        FILE *log_file = fopen(log_file_path, "a");
-        if (log_file) {
-            fprintf(log_file, "Recording started\n");
-            fprintf(log_file, "Width: %d, Height: %d, Stride: %d\n", self->width, self->height, self->stride);
-            fclose(log_file);
-        } else {
-            ERR("Failed to open log file for writing video info");
-        }
     }
 
     if (!recording_started || frame_count >= max_frames_to_save) {
@@ -244,16 +235,19 @@ int capture_acquire_frame(void* state, frame_info_t* frame)
         return -1;
     }
 
+
     // Log video stream information
     INFO("Current Video Stream Info: Width: %d, Height: %d, Stride: %d", self->width, self->height, self->stride);
 
-    // Write video stream information to log file
-    FILE *log_file = fopen(log_file_path, "a");
-    if (log_file) {
-        fprintf(log_file, "Frame %d: Width: %d, Height: %d, Stride: %d\n", frame_count, self->width, self->height, self->stride);
-        fclose(log_file);
-    } else {
-        ERR("Failed to open log file for writing video info");
+    // Write video stream information to log file if recording has started
+    if (recording_started) {
+        FILE* log_file = fopen(log_file_path, "a");
+        if (log_file) {
+            fprintf(log_file, "Frame %d: Width: %d, Height: %d, Stride: %d\n", frame_count, self->width, self->height, self->stride);
+            fclose(log_file);
+        } else {
+            ERR("Failed to open log file for writing video info");
+        }
     }
 
     // Save frame
