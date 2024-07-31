@@ -231,9 +231,6 @@ int capture_acquire_frame(void* state, frame_info_t* frame)
         return -1;
     }
 
-    // Log video stream information
-    INFO("Current Video Stream Info: Width: %d, Height: %d, Stride: %d", self->width, self->height, self->stride);
-
     // Write video stream information to log file and save frame if recording has started
     if (recording_started && frame_count < max_frames_to_save) {
         FILE* log_file = fopen(log_file_path, "a");
