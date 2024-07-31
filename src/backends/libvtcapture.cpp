@@ -203,7 +203,7 @@ int capture_terminate(void* state)
     return 0;
 }
 
-int check_file_flag(const char* flag_path) 
+int check_file_flag(const char* flag_path)
 {
     struct stat buffer;
     return (stat(flag_path, &buffer) == 0);
@@ -235,7 +235,6 @@ int capture_acquire_frame(void* state, frame_info_t* frame)
         return -1;
     }
 
-
     // Log video stream information
     INFO("Current Video Stream Info: Width: %d, Height: %d, Stride: %d", self->width, self->height, self->stride);
 
@@ -253,7 +252,7 @@ int capture_acquire_frame(void* state, frame_info_t* frame)
     // Save frame
     char filename[256];
     snprintf(filename, sizeof(filename), "/tmp/captured_frame_%d.raw", frame_count);
-    FILE *file = fopen(filename, "wb");
+    FILE* file = fopen(filename, "wb");
     if (file) {
         fwrite(buff.start_addr0, 1, self->stride * self->height, file); // Save first plane
         if (buff.start_addr1) {
