@@ -11,9 +11,6 @@
  *
  * C++14 does not define __alignas_is_defined, at least sometimes.
  *
- * GCC 8.3 reverts on this and makes C++11 behave the same as C++14
- * preventing a simple __cplusplus version check from working.
- *
  * Clang C++ without std=c++11 or std=c++14 does define alignas
  * but does so incorrectly wrt. C11 and C++11 semantics because
  * `alignas(4) float x;` is not recognized.
@@ -30,26 +27,12 @@
  *
  * MSVC does not support <stdalign.h> at least up to MSVC 2015,
  * but does appear to support alignas and alignof keywords in
- * recent standard C++.
- *
- * TCC only supports alignas with a numeric argument like
- * `alignas(4)`, but not `alignas(float)`.
+ * recent standard C++. 
  *
  * If stdalign.h is supported but heuristics in this file are
  * insufficient to detect this, try including <stdaligh.h> manually
  * or define HAVE_STDALIGN_H.
  */
-
-/* https://github.com/dvidelabs/flatcc/issues/130 */
-#ifndef __alignas_is_defined
-#if defined(__cplusplus)
-#if __cplusplus == 201103 && !defined(__clang__) && ((__GNUC__ > 8) || (__GNUC__ == 8 && __GNUC_MINOR__ >= 3))
-#define __alignas_is_defined 1
-#define __alignof_is_defined 1
-#include <stdalign.h>
-#endif
-#endif
-#endif
 
 /* Allow for alternative solution to be included first. */
 #ifndef __alignas_is_defined
@@ -62,7 +45,7 @@
 #endif
 #endif
 
-#if !defined(PORTABLE_HAS_INCLUDE_STDALIGN)
+#if !defined PORTABLE_HAS_INCLUDE_STDALIGN
 #if defined(__has_include)
 #if __has_include(<stdalign.h>)
 #define PORTABLE_HAS_INCLUDE_STDALIGN 1
@@ -127,12 +110,6 @@ extern "C" {
 
 #define _Alignas(t) __declspec (align(t))
 #define _Alignof(t) __alignof(t)
-
-#elif defined(__TINYC__)
-
-/* Supports `_Alignas(integer-expression)`, but not `_Alignas(type)`. */
-#define _Alignas(t) __attribute__(aligned(t))
-#define _Alignof(t) __alignof__(t)
 
 #else
 #error please update pstdalign.h with support for current compiler and library

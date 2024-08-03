@@ -10,6 +10,7 @@ extern "C" {
 /* Generates a constant a C byte array. */
 static void cdump(const char *name, void *addr, size_t len, FILE *fp) {
     unsigned int i;
+    unsigned char buff[17];
     unsigned char *pc = (unsigned char*)addr;
 
     // Output description if given.

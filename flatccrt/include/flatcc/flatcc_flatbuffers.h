@@ -23,11 +23,7 @@ extern "C" {
 /* Needed by C99 compilers without FLATCC_PORTABLE. */
 #include "flatcc/portable/pstdalign.h"
 
-/* Handle fallthrough attribute in switch statements. */
-#include "flatcc/portable/pattributes.h"
-
 #include "flatcc/flatcc_alloc.h"
-#include "flatcc/flatcc_assert.h"
 
 #define __FLATBUFFERS_PASTE2(a, b) a ## b
 #define __FLATBUFFERS_PASTE3(a, b, c) a ## b ## c
@@ -38,8 +34,6 @@ extern "C" {
  * or compatible definitions.
  */
 #include "flatcc/portable/pendian.h"
-/* Needed by flatcc_accessors.h to handle strict aliasing rules. */
-#include "flatcc/portable/pmemaccess.h"
 #include "flatcc/flatcc_types.h"
 #include "flatcc/flatcc_endian.h"
 #include "flatcc/flatcc_identifier.h"

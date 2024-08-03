@@ -18,27 +18,14 @@
 #pragma warning(disable: 4668) /* preprocessor name not defined */
 #endif
 
-#if !defined(PDIAGNOSTIC_AWARE_MSVC) && defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(PDIAGNOSTIC_AWARE_MSVC)
 #define PDIAGNOSTIC_AWARE_MSVC 1
-#elif !defined(PDIAGNOSTIC_AWARE_MSVC)
-#define PDIAGNOSTIC_AWARE_MSVC 0
-#endif
-
-#if !defined(PDIAGNOSTIC_AWARE_CLANG) && defined(__clang__)
+#elif defined(__clang__) && !defined(PDIAGNOSTIC_AWARE_CLANG)
 #define PDIAGNOSTIC_AWARE_CLANG 1
-#elif !defined(PDIAGNOSTIC_AWARE_CLANG)
-#define PDIAGNOSTIC_AWARE_CLANG 0
-#endif
-
-#if !defined(PDIAGNOSTIC_AWARE_GCC) && defined(__GNUC__) && !defined(__clang__)
 /* Can disable some warnings even if push is not available (gcc-4.2 vs gcc-4.7) */
-#if (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2)
+#elif ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2)) && \
+        !defined(PDIAGNOSTIC_AWARE_GCC)
 #define PDIAGNOSTIC_AWARE_GCC 1
-#endif
-#endif
-
-#if !defined(PDIAGNOSTIC_AWARE_GCC)
-#define PDIAGNOSTIC_AWARE_GCC 0
 #endif
 
 #if defined(PDIAGNOSTIC_IGNORE_UNUSED_FUNCTION) || defined(PDIAGNOSTIC_IGNORE_UNUSED)

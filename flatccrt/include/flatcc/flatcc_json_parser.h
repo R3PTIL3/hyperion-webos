@@ -14,6 +14,7 @@ extern "C" {
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "flatcc/flatcc_rtconfig.h"
 #include "flatcc/flatcc_builder.h"
@@ -22,12 +23,13 @@ extern "C" {
 #define PDIAGNOSTIC_IGNORE_UNUSED
 #include "flatcc/portable/pdiagnostic_push.h"
 
-typedef uint32_t flatcc_json_parser_flags_t;
-static const flatcc_json_parser_flags_t flatcc_json_parser_f_skip_unknown = 1;
-static const flatcc_json_parser_flags_t flatcc_json_parser_f_force_add = 2;
-static const flatcc_json_parser_flags_t flatcc_json_parser_f_with_size = 4;
-static const flatcc_json_parser_flags_t flatcc_json_parser_f_skip_array_overflow = 8;
-static const flatcc_json_parser_flags_t flatcc_json_parser_f_reject_array_underflow = 16;
+enum flatcc_json_parser_flags {
+    flatcc_json_parser_f_skip_unknown = 1,
+    flatcc_json_parser_f_force_add = 2,
+    flatcc_json_parser_f_with_size = 4,
+    flatcc_json_parser_f_skip_array_overflow = 8,
+    flatcc_json_parser_f_reject_array_underflow = 16
+};
 
 #define FLATCC_JSON_PARSE_ERROR_MAP(XX)                                     \
     XX(ok,                      "ok")                                       \
@@ -63,8 +65,8 @@ static const flatcc_json_parser_flags_t flatcc_json_parser_f_reject_array_underf
     XX(union_vector_length,     "union vector length mismatch")             \
     XX(base64,                  "invalid base64 content")                   \
     XX(base64url,               "invalid base64url content")                \
-    XX(array_underflow,         "fixed length array underflow")               \
-    XX(array_overflow,          "fixed length array overflow")                \
+    XX(array_underflow,         "fixed size array underflow")               \
+    XX(array_overflow,          "fixed size array overflow")                \
     XX(runtime,                 "runtime error")                            \
     XX(not_supported,           "not supported")
 
@@ -91,7 +93,7 @@ typedef struct flatcc_json_parser_ctx flatcc_json_parser_t;
 struct flatcc_json_parser_ctx {
     flatcc_builder_t *ctx;
     const char *line_start;
-    flatcc_json_parser_flags_t flags;
+    int flags;
 #if FLATCC_JSON_PARSE_ALLOW_UNQUOTED
     int unquoted;
 #endif
@@ -110,7 +112,7 @@ static inline int flatcc_json_parser_get_error(flatcc_json_parser_t *ctx)
     return ctx->error;
 }
 
-static inline void flatcc_json_parser_init(flatcc_json_parser_t *ctx, flatcc_builder_t *B, const char *buf, const char *end, flatcc_json_parser_flags_t flags)
+static inline void flatcc_json_parser_init(flatcc_json_parser_t *ctx, flatcc_builder_t *B, const char *buf, const char *end, int flags)
 {
     memset(ctx, 0, sizeof(*ctx));
     ctx->ctx = B;
@@ -163,7 +165,7 @@ static inline const char *flatcc_json_parser_string_end(flatcc_json_parser_t *ct
 }
 
 /*
- * Parse a string as a fixed length char array as `s` with length `n`.
+ * Parse a string as a fixed size char array as `s` with length `n`.
  * and raise errors according to overflow/underflow runtime flags. Zero
  * and truncate as needed. A trailing zero is not inserted if the input
  * is at least the same length as the char array.
@@ -235,45 +237,31 @@ static inline const char *flatcc_json_parser_symbol_start(flatcc_json_parser_t *
 static inline uint64_t flatcc_json_parser_symbol_part_ext(const char *buf, const char *end)
 {
     uint64_t w = 0;
-    size_t n = (size_t)(end - buf);
+    size_t n = end - buf;
 
     if (n > 8) {
         n = 8;
     }
     /* This can bloat inlining for a rarely executed case. */
 #if 1
+    /* Fall through comments needed to silence gcc 7 warnings. */
     switch (n) {
-    case 8:
-        w |= ((uint64_t)buf[7]) << (0 * 8);
-        goto lbl_n_7;
-    case 7:
-lbl_n_7:
-        w |= ((uint64_t)buf[6]) << (1 * 8);
-        goto lbl_n_6;
-    case 6:
-lbl_n_6:
-        w |= ((uint64_t)buf[5]) << (2 * 8);
-        goto lbl_n_5;
-    case 5:
-lbl_n_5:
-        w |= ((uint64_t)buf[4]) << (3 * 8);
-        goto lbl_n_4;
-    case 4:
-lbl_n_4:
-        w |= ((uint64_t)buf[3]) << (4 * 8);
-        goto lbl_n_3;
-    case 3:
-lbl_n_3:
-        w |= ((uint64_t)buf[2]) << (5 * 8);
-        goto lbl_n_2;
-    case 2:
-lbl_n_2:
-        w |= ((uint64_t)buf[1]) << (6 * 8);
-        goto lbl_n_1;
-    case 1:
-lbl_n_1:
-        w |= ((uint64_t)buf[0]) << (7 * 8);
-        break;
+    case 8: w |= ((uint64_t)buf[7]) << (0 * 8);
+        /* Fall through */
+    case 7: w |= ((uint64_t)buf[6]) << (1 * 8);
+        /* Fall through */
+    case 6: w |= ((uint64_t)buf[5]) << (2 * 8);
+        /* Fall through */
+    case 5: w |= ((uint64_t)buf[4]) << (3 * 8);
+        /* Fall through */
+    case 4: w |= ((uint64_t)buf[3]) << (4 * 8);
+        /* Fall through */
+    case 3: w |= ((uint64_t)buf[2]) << (5 * 8);
+        /* Fall through */
+    case 2: w |= ((uint64_t)buf[1]) << (6 * 8);
+        /* Fall through */
+    case 1: w |= ((uint64_t)buf[0]) << (7 * 8);
+        /* Fall through */
     case 0:
         break;
     }
@@ -305,7 +293,7 @@ lbl_n_1:
  */
 static inline uint64_t flatcc_json_parser_symbol_part(const char *buf, const char *end)
 {
-    size_t n = (size_t)(end - buf);
+    size_t n = end - buf;
 
 #if FLATCC_ALLOW_UNALIGNED_ACCESS
     if (n >= 8) {
@@ -885,10 +873,10 @@ const char *flatcc_json_parser_union_type_vector(flatcc_json_parser_t *ctx,
  * `buf`, `bufsiz` may be larger than the parsed json if trailing
  * space or zeroes are expected, but they must represent a valid memory buffer.
  * `fid` must be null, or a valid file identifier.
- * `flags` default to 0. See also `flatcc_json_parser_f_` constants.
+ * `flags` default to 0. See also `flatcc_json_parser_flags`.
  */
 int flatcc_json_parser_table_as_root(flatcc_builder_t *B, flatcc_json_parser_t *ctx,
-        const char *buf, size_t bufsiz, flatcc_json_parser_flags_t flags, const char *fid,
+        const char *buf, size_t bufsiz, int flags, const char *fid,
         flatcc_json_parser_table_f *parser);
 
 /*
@@ -896,7 +884,7 @@ int flatcc_json_parser_table_as_root(flatcc_builder_t *B, flatcc_json_parser_t *
  * root.
  */
 int flatcc_json_parser_struct_as_root(flatcc_builder_t *B, flatcc_json_parser_t *ctx,
-        const char *buf, size_t bufsiz, flatcc_json_parser_flags_t flags, const char *fid,
+        const char *buf, size_t bufsiz, int flags, const char *fid,
         flatcc_json_parser_struct_f *parser);
 
 #include "flatcc/portable/pdiagnostic_pop.h"
