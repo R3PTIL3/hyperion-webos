@@ -10,4 +10,4 @@ int hyperion_set_register(const char* origin, int priority);
 
 // Debug
 int debug_client(const char* hostname, int port);
-int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv_data, int width, int height, int stride);
+int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv_data, int width, int height, int stride_y, int stride_uv);
