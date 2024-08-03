@@ -77,7 +77,7 @@ typedef struct _capture_backend {
 typedef int (*unicapture_imagedata_callback_t)(void* data, int width, int height, uint8_t* rgb_data);
 
 // Callback for submitting new NV12 image data to hyperion
-typedef int (*unicapture_nv12data_callback_t)(void* data, int width, int height, uint8_t* y_data, uint8_t* uv_data, int stride);
+typedef int (*unicapture_nv12_callback_t)(void* data, int width, int height, uint8_t* y_data, uint8_t* uv_data, int stride_y, int stride_uv);
 
 typedef struct _unicapture_state {
     capture_backend_t* ui_capture;
@@ -100,8 +100,8 @@ typedef struct _unicapture_state {
     unicapture_imagedata_callback_t callback;
     void* callback_data;
 
-    unicapture_nv12data_callback_t nv12_callback;  // NV12
-    void* nv12_callback_data;                      // NV12
+    unicapture_nv12_callback_t nv12_callback; // NV12
+    void* nv12_callback_data; // NV12
 
     bool dump_frames;
 

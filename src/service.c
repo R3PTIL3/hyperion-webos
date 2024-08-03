@@ -77,9 +77,9 @@ int service_feed_frame(void* data __attribute__((unused)), int width, int height
 }
 
 // NV12
-int service_feed_frame_nv12(void* data __attribute__((unused)), int width, int height, uint8_t* y_data, uint8_t* uv_data, int stride) {
+int service_feed_frame_nv12(void* data __attribute__((unused)), int width, int height, uint8_t* y_data, uint8_t* uv_data, int stride_y, int stride_uv) {
     int ret;
-    if ((ret = hyperion_set_nv12_image(y_data, uv_data, width, height, stride)) != 0) {
+    if ((ret = hyperion_set_nv12_image(y_data, uv_data, width, height, stride_y, stride_uv)) != 0) {
         WARN("NV12 frame sending failed: %d", ret);
     }
     return 0;

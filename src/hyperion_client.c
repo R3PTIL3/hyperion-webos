@@ -130,8 +130,7 @@ int hyperion_set_image(const unsigned char* image, int width, int height)
     flatcc_builder_clear(&B);
     return ret;
 }
-
-int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv_data, int width, int height, int stride) {
+int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv_data, int width, int height, int stride_y, int stride_uv) {
     flatbuffers_builder_t B;
     flatcc_builder_init(&B);
     flatbuffers_uint8_vec_ref_t yData = flatcc_builder_create_type_vector(&B, y_data, width * height);
