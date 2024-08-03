@@ -142,9 +142,10 @@ int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv
     hyperionnet_Request_ref_t req = hyperionnet_Request_create_as_root(&B, hyperionnet_Command_as_Image(imageReq));
     size_t size;
     void* buf = flatcc_builder_finalize_buffer(&B, &size);
-    
+
     int ret = _send_debug_message(buf, size);
     free(buf);
+
     flatcc_builder_clear(&B);    
     return ret;
 }
