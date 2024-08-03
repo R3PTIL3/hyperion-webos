@@ -146,7 +146,7 @@ int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv
     int ret = _send_debug_message(buf, size);
     free(buf);
 
-    flatcc_builder_clear(&B);    
+    flatcc_builder_clear(&B);
     return ret;
 }
 
