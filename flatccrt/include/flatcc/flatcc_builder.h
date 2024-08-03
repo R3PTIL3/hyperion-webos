@@ -12,7 +12,7 @@ extern "C" {
  * languages.
  *
  * The builder has two API layers: a stack based `start/end` approach,
- * and a direct `create`, and they may be fixed freely. The direct
+ * and a direct `create`, and they may be mixed freely. The direct
  * approach may be used as part of more specialized optimizations such
  * as rewriting buffers while the stack approach is convenient for state
  * machine driven parsers without a stack, or with a very simple stack
@@ -41,7 +41,7 @@ extern "C" {
  * these references remain stable an may be used for external references
  * into the buffer.
  *
- * The maximum buffer than can be constructed is in praxis limited to
+ * The maximum buffer that can be constructed is in praxis limited to
  * half the UOFFSET_MAX size, typically 2^31 bytes, not counting
  * clustered vtables that may consume and additional 2^31 bytes
  * (positive address range), but in praxis cannot because vtable
@@ -71,7 +71,7 @@ extern "C" {
 
 /* It is possible to enable logging here. */
 #ifndef FLATCC_BUILDER_ASSERT
-#define FLATCC_BUILDER_ASSERT(cond, reason) assert(cond)
+#define FLATCC_BUILDER_ASSERT(cond, reason) FLATCC_ASSERT(cond)
 #endif
 
 /*
@@ -353,7 +353,7 @@ struct __flatcc_builder_frame {
         __flatcc_builder_table_frame_t table;
         __flatcc_builder_vector_frame_t vector;
         __flatcc_builder_buffer_frame_t buffer;
-    };
+    } container;
 };
 
 /**
@@ -710,10 +710,13 @@ static inline void flatcc_builder_refmap_reset(flatcc_builder_t *B)
 }
 
 
-enum flatcc_builder_buffer_flags {
-    flatcc_builder_is_nested = 1,
-    flatcc_builder_with_size = 2,
-};
+typedef uint16_t flatcc_builder_buffer_flags_t;
+static const flatcc_builder_buffer_flags_t flatcc_builder_is_nested = 1;
+static const flatcc_builder_buffer_flags_t flatcc_builder_with_size = 2;
+
+/* The flag size in the API needs to match the internal size. */
+static_assert(sizeof(flatcc_builder_buffer_flags_t) ==
+              sizeof(((flatcc_builder_t *)0)->buffer_flags), "flag size mismatch");
 
 /**
  * An alternative to start buffer, start struct/table ... end buffer.
@@ -776,7 +779,7 @@ enum flatcc_builder_buffer_flags {
 flatcc_builder_ref_t flatcc_builder_create_buffer(flatcc_builder_t *B,
         const char identifier[FLATBUFFERS_IDENTIFIER_SIZE],
         uint16_t block_align,
-        flatcc_builder_ref_t ref, uint16_t align, int flags);
+        flatcc_builder_ref_t ref, uint16_t align, flatcc_builder_buffer_flags_t flags);
 
 /**
  * Creates a struct within the current buffer without using any
@@ -867,7 +870,7 @@ flatcc_builder_ref_t flatcc_builder_end_struct(flatcc_builder_t *B);
  */
 int flatcc_builder_start_buffer(flatcc_builder_t *B,
         const char identifier[FLATBUFFERS_IDENTIFIER_SIZE],
-        uint16_t block_align, int flags);
+        uint16_t block_align, flatcc_builder_buffer_flags_t flags);
 
 /**
  * The root object should be a struct or a table to conform to the
@@ -923,7 +926,7 @@ flatcc_builder_ref_t flatcc_builder_end_buffer(flatcc_builder_t *B, flatcc_build
  */
 flatcc_builder_ref_t flatcc_builder_embed_buffer(flatcc_builder_t *B,
         uint16_t block_align,
-        const void *data, size_t size, uint16_t align, int flags);
+        const void *data, size_t size, uint16_t align, flatcc_builder_buffer_flags_t flags);
 
 /**
  * Applies to the innermost open buffer. The identifier may be null or
@@ -1871,6 +1874,20 @@ void *flatcc_builder_aligned_alloc(size_t alignment, size_t size);
  * to the applications compile time flags.
  */
 void flatcc_builder_aligned_free(void *p);
+
+/*
+ * Same allocation as `flatcc_builder_finalize_buffer` returnes. Usually
+ * same as `malloc` but can redefined via macros.
+ */
+void *flatcc_builder_alloc(size_t size);
+
+/*
+ * A stable implementation of `free` when the default allocation
+ * methods have been redefined.
+ *
+ * Deallocates memory returned from `flatcc_builder_finalize_buffer`.
+ */
+void flatcc_builder_free(void *p);
 
 /*
  * Only for use with the default emitter.

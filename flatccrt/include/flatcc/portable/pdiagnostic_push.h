@@ -1,6 +1,3 @@
-#ifndef PDIAGNOSTIC_PUSH_H
-#define PDIAGNOSTIC_PUSH_H
-
 /*
  * See also comment in "pdiagnostic.h"
  *
@@ -29,18 +26,26 @@
 #if defined(_MSC_VER)
 #pragma warning( push )
 #define PDIAGNOSTIC_PUSHED_MSVC 1
-#elif defined(__clang__)
-#pragma clang diagnostic push
-#define PDIAGNOSTIC_PUSHED_CLANG 1
-#elif ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
-#pragma GCC diagnostic push
-#define PDIAGNOSTIC_PUSHED_GCC 1
+#else
+#define PDIAGNOSTIC_PUSHED_MSVC 0
 #endif
 
-#endif /* PDIAGNOSTIC_PUSH_H */
+#if defined(__clang__)
+#pragma clang diagnostic push
+#define PDIAGNOSTIC_PUSHED_CLANG 1
+#else
+#define PDIAGNOSTIC_PUSHED_CLANG 0
+#endif
 
-/*
- * We cannot handle nested push, but we can add to the parent context
- * so keep this outside the header include guard.
- */
+#if defined(__GNUC__) && !defined(__clang__)
+#if ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
+#pragma GCC diagnostic push
+#define PDIAGNOSTIC_PUSHED_GCC 1
+#else
+#define PDIAGNOSTIC_PUSHED_GCC 0
+#endif // GNUC >= 4.6
+#else
+#define PDIAGNOSTIC_PUSHED_GCC 0
+#endif // defined(__GNUC__) && !defined(__clang__)
+
 #include "pdiagnostic.h"

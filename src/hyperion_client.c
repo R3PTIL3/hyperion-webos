@@ -19,6 +19,7 @@
 static int _connect_unix_socket(const char* hostname);
 static int _connect_inet_socket(const char* hostname, int port);
 static int _send_message(const void* buffer, size_t size);
+static int _send_debug_message(const void* buffer, size_t size); // Send debug message
 static bool _parse_reply(hyperionnet_Reply_table_t reply);
 
 static int sockfd;
@@ -27,6 +28,9 @@ static int _priority = 0;
 static const char* _origin = NULL;
 static bool _connected = false;
 unsigned char recvBuff[1024];
+
+static int debug_sockfd;
+static bool debug_connected = false;
 
 int hyperion_client(const char* origin, const char* hostname, int port, bool unix_socket, int priority)
 {
@@ -41,6 +45,49 @@ int hyperion_client(const char* origin, const char* hostname, int port, bool uni
     } else {
         return _connect_inet_socket(hostname, port);
     }
+}
+
+int debug_client(const char* hostname, int port)
+{
+    debug_connected = false;
+    debug_sockfd = 0;
+
+    struct sockaddr_in serv_addr_in;
+
+    if ((debug_sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        WARN("Could not create debug socket: %s", strerror(errno));
+        return 1;
+    }
+    struct timeval timeout;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+
+    if (setsockopt(debug_sockfd, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout)) < 0) {
+        WARN("setsockopt(SO_SNDTIMEO) failed for debug socket: %s", strerror(errno));
+        return 1;
+    }
+
+    if (setsockopt(debug_sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) < 0) {
+        WARN("setsockopt(SO_RCVTIMEO) failed for debug socket: %s", strerror(errno));
+        return 1;
+    }
+
+    memset(&serv_addr_in, 0, sizeof(serv_addr_in));
+    serv_addr_in.sin_family = AF_INET;
+    serv_addr_in.sin_port = htons(port);
+
+    if (inet_pton(AF_INET, hostname, &serv_addr_in.sin_addr) <= 0) {
+        WARN("inet_pton error occurred for debug socket (hostname: %s): %s", hostname, strerror(errno));
+        return 1;
+    }
+
+    if (connect(debug_sockfd, (struct sockaddr*)&serv_addr_in, sizeof(serv_addr_in)) < 0) {
+        WARN("connect() to %s:%d failed for debug socket: %s", hostname, port, strerror(errno));
+        return 1;
+    }
+    debug_connected = true;
+
+    return 0;
 }
 
 int hyperion_read()
@@ -81,6 +128,22 @@ int hyperion_set_image(const unsigned char* image, int width, int height)
     int ret = _send_message(buf, size);
     free(buf);
     flatcc_builder_clear(&B);
+    return ret;
+}
+
+int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv_data, int width, int height, int stride) {
+    flatbuffers_builder_t B;
+    flatcc_builder_init(&B);
+    flatbuffers_uint8_vec_ref_t yData = flatcc_builder_create_type_vector(&B, y_data, width * height);
+    flatbuffers_uint8_vec_ref_t uvData = flatcc_builder_create_type_vector(&B, uv_data, (width * height) / 2);
+    hyperionnet_NV12Image_ref_t nv12Img = hyperionnet_NV12Image_create(&B, yData, uvData, width, height, stride);
+    hyperionnet_Image_ref_t imageReq = hyperionnet_Image_create(&B, hyperionnet_ImageType_as_NV12Image(nv12Img), -1);
+    hyperionnet_Request_ref_t req = hyperionnet_Request_create_as_root(&B, hyperionnet_Command_as_Image(imageReq));
+    size_t size;
+    void* buf = flatcc_builder_finalize_buffer(&B, &size);
+    int ret = _send_message(buf, size);
+    free(buf);
+    flatcc_builder_clear(&B);    
     return ret;
 }
 

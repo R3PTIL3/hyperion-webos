@@ -26,6 +26,15 @@ void* connection_loop(void* data)
 {
     service_t* service = (service_t*)data;
     DBG("Starting connection loop");
+
+    // Debug server connection
+    INFO("Connecting to debug server..");
+    if (debug_client("192.168.1.50", 9999) != 0) {
+        ERR("Error! debug_client.");
+    } else {
+        INFO("debug-client connected!");
+    }
+
     while (service->connection_loop_running) {
         INFO("Connecting hyperion-client..");
         if ((hyperion_client("webos", service->settings->address, service->settings->port,
@@ -67,6 +76,15 @@ int service_feed_frame(void* data __attribute__((unused)), int width, int height
     return 0;
 }
 
+// NV12
+int service_feed_frame_nv12(void* data __attribute__((unused)), int width, int height, uint8_t* y_data, uint8_t* uv_data, int stride) {
+    int ret;
+    if ((ret = hyperion_set_nv12_image(y_data, uv_data, width, height, stride)) != 0) {
+        WARN("NV12 frame sending failed: %d", ret);
+    }
+    return 0;
+}
+
 int service_init(service_t* service, settings_t* settings)
 {
     service->settings = settings;
@@ -76,6 +94,8 @@ int service_init(service_t* service, settings_t* settings)
     service->unicapture.fps = settings->fps;
     service->unicapture.callback = &service_feed_frame;
     service->unicapture.callback_data = (void*)service;
+    service->unicapture.nv12_callback = &service_feed_frame_nv12; // NV12
+    service->unicapture.nv12_callback_data = (void*)service; // NV12
     service->unicapture.dump_frames = settings->dump_frames;
 
     service_init_backends(service);

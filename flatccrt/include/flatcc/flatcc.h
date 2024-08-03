@@ -16,6 +16,8 @@ extern "C" {
  * which has a life of its own.
  */
 
+#include <stddef.h>
+
 #ifndef UINT8_MAX
 #include <stdint.h>
 #endif
@@ -26,7 +28,7 @@ extern "C" {
 #endif
 
 typedef struct flatcc_options flatcc_options_t;
-typedef void (*flatcc_error_fun) (void *err_ctx, const char *buf, int len);
+typedef void (*flatcc_error_fun) (void *err_ctx, const char *buf, size_t len);
 
 struct flatcc_options {
     size_t max_schema_size;
@@ -82,7 +84,7 @@ struct flatcc_options {
     int cgen_recursive;
     int cgen_spacing;
     int cgen_no_conflicts;
-
+    int cgen;
 
     int bgen_bfbs;
     int bgen_qualify_names;
