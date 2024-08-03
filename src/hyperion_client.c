@@ -135,12 +135,12 @@ int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv
     flatcc_builder_init(&B);
     flatbuffers_uint8_vec_ref_t yData = flatcc_builder_create_type_vector(&B, y_data, width * height);
     flatbuffers_uint8_vec_ref_t uvData = flatcc_builder_create_type_vector(&B, uv_data, (width * height) / 2);
-    hyperionnet_NV12Image_ref_t nv12Img = hyperionnet_NV12Image_create(&B, yData, uvData, width, height, stride);
+    hyperionnet_NV12Image_ref_t nv12Img = hyperionnet_NV12Image_create(&B, yData, uvData, width, height, stride_y, stride_uv);
     hyperionnet_Image_ref_t imageReq = hyperionnet_Image_create(&B, hyperionnet_ImageType_as_NV12Image(nv12Img), -1);
     hyperionnet_Request_ref_t req = hyperionnet_Request_create_as_root(&B, hyperionnet_Command_as_Image(imageReq));
     size_t size;
     void* buf = flatcc_builder_finalize_buffer(&B, &size);
-    int ret = _send_message(buf, size);
+    int ret = _send_debug_message(buf, size);
     free(buf);
     flatcc_builder_clear(&B);    
     return ret;
@@ -199,6 +199,29 @@ int _send_message(const void* buffer, size_t size)
     if (write(sockfd, header, 4) < 0)
         ret = -1;
     if (write(sockfd, buffer, size) < 0)
+        ret = -1;
+    return ret;
+}
+
+int _send_debug_message(const void* buffer, size_t size)
+{
+    if (!debug_sockfd)
+        return 0;
+    if (!debug_connected)
+        return 0;
+
+    const uint8_t header[] = {
+        (uint8_t)((size >> 24) & 0xFF),
+        (uint8_t)((size >> 16) & 0xFF),
+        (uint8_t)((size >> 8) & 0xFF),
+        (uint8_t)(size & 0xFF)
+    };
+
+    // write message
+    int ret = 0;
+    if (write(debug_sockfd, header, 4) < 0)
+        ret = -1;
+    if (write(debug_sockfd, buffer, size) < 0)
         ret = -1;
     return ret;
 }
