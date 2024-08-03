@@ -187,8 +187,8 @@ void* unicapture_run(void* data)
             if (this->nv12_callback != NULL) {
                 
                 this->nv12_callback(this->nv12_callback_data, video_frame.width, video_frame.height, 
-                                    video_frame.planes[0].buffer, video_frame.planes[1].buffer,
-                                    video_frame.planes[0].stride, video_frame.planes[1].stride);
+                    video_frame.planes[0].buffer, video_frame.planes[1].buffer,
+                    video_frame.planes[0].stride, video_frame.planes[1].stride);
             }
         }
 
