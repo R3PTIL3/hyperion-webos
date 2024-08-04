@@ -133,19 +133,67 @@ int hyperion_set_image(const unsigned char* image, int width, int height)
 
 int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv_data, int width, int height, int stride_y, int stride_uv)
 {
+    INFO("Starting hyperion_set_nv12_image: %d x %d, y_stride: %d, uv_stride: %d", width, height, stride_y, stride_uv);
+
+    if (!y_data || !uv_data) {
+        WARN("Invalid NV12 data pointers. y_data: %p, uv_data: %p", y_data, uv_data);
+        return -1;
+    }
+
     flatbuffers_builder_t B;
     flatcc_builder_init(&B);
+
     flatbuffers_uint8_vec_ref_t yData = flatcc_builder_create_type_vector(&B, y_data, width * height);
+    if (!yData) {
+        WARN("Failed to create yData vector.");
+        flatcc_builder_clear(&B);
+        return -1;
+    }
+
     flatbuffers_uint8_vec_ref_t uvData = flatcc_builder_create_type_vector(&B, uv_data, (width * height) / 2);
+    if (!uvData) {
+        WARN("Failed to create uvData vector.");
+        flatcc_builder_clear(&B);
+        return -1;
+    }
+
     hyperionnet_NV12Image_ref_t nv12Img = hyperionnet_NV12Image_create(&B, yData, uvData, width, height, stride_y, stride_uv);
+    if (!nv12Img) {
+        WARN("Failed to create NV12Image.");
+        flatcc_builder_clear(&B);
+        return -1;
+    }
+
     hyperionnet_Image_ref_t imageReq = hyperionnet_Image_create(&B, hyperionnet_ImageType_as_NV12Image(nv12Img), -1);
+    if (!imageReq) {
+        WARN("Failed to create Image request.");
+        flatcc_builder_clear(&B);
+        return -1;
+    }
+
     hyperionnet_Request_ref_t req = hyperionnet_Request_create_as_root(&B, hyperionnet_Command_as_Image(imageReq));
+    if (!req) {
+        WARN("Failed to create Request.");
+        flatcc_builder_clear(&B);
+        return -1;
+    }
+
     size_t size;
     void* buf = flatcc_builder_finalize_buffer(&B, &size);
+    if (!buf) {
+        WARN("Failed to finalize buffer.");
+        flatcc_builder_clear(&B);
+        return -1;
+    }
 
     int ret = _send_debug_message(buf, size);
-    free(buf);
+    if (ret != 0) {
+        WARN("Failed to send debug message. Error code: %d", ret);
+    } else {
+        INFO("Successfully sent debug message.");
+    }
 
+    free(buf);
     flatcc_builder_clear(&B);
     return ret;
 }
@@ -209,10 +257,14 @@ int _send_message(const void* buffer, size_t size)
 
 int _send_debug_message(const void* buffer, size_t size)
 {
-    if (!debug_sockfd)
-        return 0;
-    if (!debug_connected)
-        return 0;
+    if (!debug_sockfd) {
+        ERR("Debug socket is not initialized");
+        return -1;
+    }
+    if (!debug_connected) {
+        ERR("Debug socket is not connected");
+        return -1;
+    }
 
     const uint8_t header[] = {
         (uint8_t)((size >> 24) & 0xFF),
@@ -223,13 +275,16 @@ int _send_debug_message(const void* buffer, size_t size)
 
     // write message
     int ret = 0;
-    if (write(debug_sockfd, header, 4) < 0)
+    if (write(debug_sockfd, header, 4) < 0) {
+        ERR("Failed to write header to debug socket: %s", strerror(errno));
         ret = -1;
-    if (write(debug_sockfd, buffer, size) < 0)
+    }
+    if (write(debug_sockfd, buffer, size) < 0) {
+        ERR("Failed to write buffer to debug socket: %s", strerror(errno));
         ret = -1;
+    }
     return ret;
 }
-
 bool _parse_reply(hyperionnet_Reply_table_t reply)
 {
     if (!hyperionnet_Reply_error(reply)) {
