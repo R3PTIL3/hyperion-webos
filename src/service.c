@@ -37,7 +37,8 @@ void* connection_loop(void* data)
 
         INFO("Connecting hyperion-client..");
         if ((hyperion_client("webos", service->settings->address, service->settings->port,
-                service->settings->unix_socket, service->settings->priority)) != 0) {
+                service->settings->unix_socket, service->settings->priority))
+            != 0) {
             ERR("Error! hyperion_client.");
         } else {
             INFO("hyperion-client connected!");
