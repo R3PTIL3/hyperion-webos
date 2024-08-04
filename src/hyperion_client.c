@@ -189,7 +189,8 @@ int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv
     INFO("Buffer size: %zu", size);
     for (size_t i = 0; i < size; i++) {
         printf("%02X ", ((unsigned char*)buf)[i]);
-        if ((i + 1) % 16 == 0) printf("\n");
+        if ((i + 1) % 16 == 0)
+            printf("\n");
     }
     printf("\n");
 
