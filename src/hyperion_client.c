@@ -186,6 +186,13 @@ int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv
         return -1;
     }
 
+    INFO("Buffer size: %zu", size);
+    for (size_t i = 0; i < size; i++) {
+        printf("%02X ", ((unsigned char*)buf)[i]);
+        if ((i + 1) % 16 == 0) printf("\n");
+    }
+    printf("\n");
+
     int ret = _send_debug_message(buf, size);
     if (ret != 0) {
         WARN("Failed to send debug message. Error code: %d", ret);

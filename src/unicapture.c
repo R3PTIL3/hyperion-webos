@@ -183,6 +183,7 @@ void* unicapture_run(void* data)
         // TODO fastpaths handling?
 
         // Send NV12 frames without conversion
+        INFO("NV12 UI: pixfmt: %d; %dx%d", ui_frame.pixel_format, ui_frame.width, ui_frame.height);
         if (video_frame.pixel_format == PIXFMT_YUV420_SEMI_PLANAR) {
             if (this->nv12_callback != NULL) {
 
