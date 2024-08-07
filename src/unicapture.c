@@ -192,7 +192,7 @@ void* unicapture_run(void* data)
                     video_frame.planes[0].buffer, video_frame.planes[1].buffer,
                     video_frame.planes[0].stride, video_frame.planes[1].stride);
             }
-            continue;  // Skip the rest of the processing for this frame
+            continue; // Skip the rest of the processing for this frame
         }
 
         // Convert frame to suitable video formats
