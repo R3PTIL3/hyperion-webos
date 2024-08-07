@@ -116,8 +116,8 @@ static inline hyperionnet_NV12Image_table_t hyperionnet_NV12Image_vec_at(hyperio
 __flatbuffers_offset_vec_at(hyperionnet_NV12Image_table_t, vec, i, 0)
 __flatbuffers_table_as_root(hyperionnet_NV12Image)
 
-__flatbuffers_define_vector_field(0, hyperionnet_NV12Image, yData, flatbuffers_uint8_vec_t, 0)
-__flatbuffers_define_vector_field(1, hyperionnet_NV12Image, uvData, flatbuffers_uint8_vec_t, 0)
+__flatbuffers_define_vector_field(0, hyperionnet_NV12Image, data_y, flatbuffers_uint8_vec_t, 0)
+__flatbuffers_define_vector_field(1, hyperionnet_NV12Image, data_uv, flatbuffers_uint8_vec_t, 0)
 __flatbuffers_define_scalar_field(2, hyperionnet_NV12Image, width, flatbuffers_int32, int32_t, INT32_C(-1))
 __flatbuffers_define_scalar_field(3, hyperionnet_NV12Image, height, flatbuffers_int32, int32_t, INT32_C(-1))
 __flatbuffers_define_scalar_field(4, hyperionnet_NV12Image, stride_y, flatbuffers_int32, int32_t, INT32_C(-1))

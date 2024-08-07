@@ -13,8 +13,8 @@ table RawImage {
 }
 
 table NV12Image {
-  yData:[ubyte];
-  uvData:[ubyte];
+  data_y:[ubyte];
+  data_uv:[ubyte];
   width:int = -1;
   height:int = -1;
   stride_y:int = -1;

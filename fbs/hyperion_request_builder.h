@@ -187,8 +187,8 @@ static hyperionnet_RawImage_ref_t hyperionnet_RawImage_clone(flatbuffers_builder
     __flatbuffers_memoize_end(B, t, hyperionnet_RawImage_end(B));
 }
 
-__flatbuffers_build_vector_field(0, flatbuffers_, hyperionnet_NV12Image_yData, flatbuffers_uint8, uint8_t, hyperionnet_NV12Image)
-__flatbuffers_build_vector_field(1, flatbuffers_, hyperionnet_NV12Image_uvData, flatbuffers_uint8, uint8_t, hyperionnet_NV12Image)
+__flatbuffers_build_vector_field(0, flatbuffers_, hyperionnet_NV12Image_data_y, flatbuffers_uint8, uint8_t, hyperionnet_NV12Image)
+__flatbuffers_build_vector_field(1, flatbuffers_, hyperionnet_NV12Image_data_uv, flatbuffers_uint8, uint8_t, hyperionnet_NV12Image)
 __flatbuffers_build_scalar_field(2, flatbuffers_, hyperionnet_NV12Image_width, flatbuffers_int32, int32_t, 4, 4, INT32_C(-1), hyperionnet_NV12Image)
 __flatbuffers_build_scalar_field(3, flatbuffers_, hyperionnet_NV12Image_height, flatbuffers_int32, int32_t, 4, 4, INT32_C(-1), hyperionnet_NV12Image)
 __flatbuffers_build_scalar_field(4, flatbuffers_, hyperionnet_NV12Image_stride_y, flatbuffers_int32, int32_t, 4, 4, INT32_C(-1), hyperionnet_NV12Image)
@@ -197,8 +197,8 @@ __flatbuffers_build_scalar_field(5, flatbuffers_, hyperionnet_NV12Image_stride_u
 static inline hyperionnet_NV12Image_ref_t hyperionnet_NV12Image_create(flatbuffers_builder_t *B __hyperionnet_NV12Image_formal_args)
 {
     if (hyperionnet_NV12Image_start(B)
-        || hyperionnet_NV12Image_yData_add(B, v0)
-        || hyperionnet_NV12Image_uvData_add(B, v1)
+        || hyperionnet_NV12Image_data_y_add(B, v0)
+        || hyperionnet_NV12Image_data_uv_add(B, v1)
         || hyperionnet_NV12Image_width_add(B, v2)
         || hyperionnet_NV12Image_height_add(B, v3)
         || hyperionnet_NV12Image_stride_y_add(B, v4)
@@ -212,8 +212,8 @@ static hyperionnet_NV12Image_ref_t hyperionnet_NV12Image_clone(flatbuffers_build
 {
     __flatbuffers_memoize_begin(B, t);
     if (hyperionnet_NV12Image_start(B)
-        || hyperionnet_NV12Image_yData_pick(B, t)
-        || hyperionnet_NV12Image_uvData_pick(B, t)
+        || hyperionnet_NV12Image_data_y_pick(B, t)
+        || hyperionnet_NV12Image_data_uv_pick(B, t)
         || hyperionnet_NV12Image_width_pick(B, t)
         || hyperionnet_NV12Image_height_pick(B, t)
         || hyperionnet_NV12Image_stride_y_pick(B, t)
