@@ -180,17 +180,19 @@ void* unicapture_run(void* data)
         }
 
         uint64_t frame_acquired = getticks_us();
-        // TODO fastpaths handling?
 
-        // Send NV12 frames without conversion
-        INFO("NV12 UI: pixfmt: %d; %dx%d", ui_frame.pixel_format, ui_frame.width, ui_frame.height);
+        // Directly send NV12 frames without conversion
         if (video_frame.pixel_format == PIXFMT_YUV420_SEMI_PLANAR) {
-            if (this->nv12_callback != NULL) {
+            INFO("Sending NV12 frame without conversion: %dx%d, y_stride: %d, uv_stride: %d",
+                video_frame.width, video_frame.height,
+                video_frame.planes[0].stride, video_frame.planes[1].stride);
 
+            if (this->nv12_callback != NULL) {
                 this->nv12_callback(this->nv12_callback_data, video_frame.width, video_frame.height,
                     video_frame.planes[0].buffer, video_frame.planes[1].buffer,
                     video_frame.planes[0].stride, video_frame.planes[1].stride);
             }
+            continue;  // Skip the rest of the processing for this frame
         }
 
         // Convert frame to suitable video formats

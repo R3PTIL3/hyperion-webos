@@ -28,13 +28,6 @@ void* connection_loop(void* data)
     DBG("Starting connection loop");
 
     while (service->connection_loop_running) {
-        INFO("Connecting to debug server..");
-        if (debug_client("192.168.1.50", 9999) != 0) {
-            ERR("Error! debug_client.");
-        } else {
-            INFO("debug-client connected!");
-        }
-
         INFO("Connecting hyperion-client..");
         if ((hyperion_client("webos", service->settings->address, service->settings->port,
                 service->settings->unix_socket, service->settings->priority))
