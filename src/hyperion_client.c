@@ -73,6 +73,7 @@ int hyperion_destroy()
 
 int hyperion_set_image(const unsigned char* image, int width, int height)
 {
+    INFO("Setting image RGB");
     flatbuffers_builder_t B;
     flatcc_builder_init(&B);
     flatbuffers_uint8_vec_ref_t imgData = flatcc_builder_create_type_vector(&B, image, width * height * 3);
@@ -82,6 +83,7 @@ int hyperion_set_image(const unsigned char* image, int width, int height)
     size_t size;
     void* buf = flatcc_builder_finalize_buffer(&B, &size);
     int ret = _send_message(buf, size);
+    INFO("Sent RGB image");
     free(buf);
     flatcc_builder_clear(&B);
     return ret;
@@ -89,6 +91,7 @@ int hyperion_set_image(const unsigned char* image, int width, int height)
 
 int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv_data, int width, int height, int stride_y, int stride_uv)
 {
+    INFO("Setting image NV12");
     flatbuffers_builder_t B;
     flatcc_builder_init(&B);
     flatbuffers_uint8_vec_ref_t data_y = flatcc_builder_create_type_vector(&B, y_data, width * height);
@@ -99,6 +102,7 @@ int hyperion_set_nv12_image(const unsigned char* y_data, const unsigned char* uv
     size_t size;
     void* buf = flatcc_builder_finalize_buffer(&B, &size);
     int ret = _send_message(buf, size);
+    INFO("Sent NV12 image");
     free(buf);
     flatcc_builder_clear(&B);
     return ret;

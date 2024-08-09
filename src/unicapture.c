@@ -181,8 +181,94 @@ void* unicapture_run(void* data)
 
         uint64_t frame_acquired = getticks_us();
 
-        // Directly send NV12 frames without conversion
-        if (video_frame.pixel_format == PIXFMT_YUV420_SEMI_PLANAR) {
+        if (video_frame.pixel_format != PIXFMT_YUV420_SEMI_PLANAR) {
+
+            // Convert frame to suitable video formats
+            if (ui_frame.pixel_format != PIXFMT_INVALID) {
+                converter_run(&ui_converter, &ui_frame, &ui_frame_converted, PIXFMT_ARGB);
+            }
+
+            if (video_frame.pixel_format != PIXFMT_INVALID) {
+                converter_run(&video_converter, &video_frame, &video_frame_converted, PIXFMT_ARGB);
+            }
+
+            uint64_t frame_converted = getticks_us();
+
+            bool got_frame = true;
+            int width = 0;
+            int height = 0;
+
+            // Blend frames and prepare for sending
+            if (video_frame_converted.pixel_format != PIXFMT_INVALID && ui_frame_converted.pixel_format != PIXFMT_INVALID) {
+                width = video_frame_converted.width;
+                height = video_frame_converted.height;
+
+                blended_frame = realloc(blended_frame, width * height * 4);
+                final_frame = realloc(final_frame, width * height * 3);
+
+                ARGBBlend(
+                    ui_frame_converted.planes[0].buffer,
+                    ui_frame_converted.planes[0].stride,
+                    video_frame_converted.planes[0].buffer,
+                    video_frame_converted.planes[0].stride,
+                    blended_frame,
+                    4 * width,
+                    width,
+                    height);
+                ARGBToRAW(
+                    blended_frame,
+                    4 * width,
+                    final_frame,
+                    3 * width,
+                    width,
+                    height);
+            } else if (ui_frame_converted.pixel_format != PIXFMT_INVALID) {
+                width = ui_frame_converted.width;
+                height = ui_frame_converted.height;
+
+                final_frame = realloc(final_frame, width * height * 3);
+
+                ARGBToRAW(
+                    ui_frame_converted.planes[0].buffer,
+                    ui_frame_converted.planes[0].stride,
+                    final_frame,
+                    3 * width,
+                    width,
+                    height);
+            } else if (video_frame_converted.pixel_format != PIXFMT_INVALID) {
+                width = video_frame_converted.width;
+                height = video_frame_converted.height;
+
+                final_frame = realloc(final_frame, width * height * 3);
+
+                ARGBToRAW(
+                    video_frame_converted.planes[0].buffer,
+                    video_frame_converted.planes[0].stride,
+                    final_frame,
+                    3 * width,
+                    width,
+                    height);
+            } else {
+                got_frame = false;
+                WARN("No valid frame to send...");
+            }
+
+            uint64_t frame_processed = getticks_us();
+
+            if (this->dump_frames && got_frame && framecounter % 30 == 0) {
+                char filename[256];
+                snprintf(filename, sizeof(filename), "/tmp/hyperion-webos-dump.%03d.data", (int)(framecounter / 30) % 10);
+                FILE* fd = fopen(filename, "wb");
+                fwrite(final_frame, 3 * width * height, 1, fd);
+                fclose(fd);
+                INFO("Buffer dumped to: %s", filename);
+            }
+
+            if (this->callback != NULL) {
+                this->callback(this->callback_data, width, height, final_frame);
+            }
+        } else if (video_frame.pixel_format == PIXFMT_YUV420_SEMI_PLANAR) {
+            // Directly send NV12 frames without conversion
             INFO("Sending NV12 frame without conversion: %dx%d, y_stride: %d, uv_stride: %d",
                 video_frame.width, video_frame.height,
                 video_frame.planes[0].stride, video_frame.planes[1].stride);
@@ -193,91 +279,6 @@ void* unicapture_run(void* data)
                     video_frame.planes[0].stride, video_frame.planes[1].stride);
             }
             continue; // Skip the rest of the processing for this frame
-        }
-
-        // Convert frame to suitable video formats
-        if (ui_frame.pixel_format != PIXFMT_INVALID) {
-            converter_run(&ui_converter, &ui_frame, &ui_frame_converted, PIXFMT_ARGB);
-        }
-
-        if (video_frame.pixel_format != PIXFMT_INVALID) {
-            converter_run(&video_converter, &video_frame, &video_frame_converted, PIXFMT_ARGB);
-        }
-
-        uint64_t frame_converted = getticks_us();
-
-        bool got_frame = true;
-        int width = 0;
-        int height = 0;
-
-        // Blend frames and prepare for sending
-        if (video_frame_converted.pixel_format != PIXFMT_INVALID && ui_frame_converted.pixel_format != PIXFMT_INVALID) {
-            width = video_frame_converted.width;
-            height = video_frame_converted.height;
-
-            blended_frame = realloc(blended_frame, width * height * 4);
-            final_frame = realloc(final_frame, width * height * 3);
-
-            ARGBBlend(
-                ui_frame_converted.planes[0].buffer,
-                ui_frame_converted.planes[0].stride,
-                video_frame_converted.planes[0].buffer,
-                video_frame_converted.planes[0].stride,
-                blended_frame,
-                4 * width,
-                width,
-                height);
-            ARGBToRAW(
-                blended_frame,
-                4 * width,
-                final_frame,
-                3 * width,
-                width,
-                height);
-        } else if (ui_frame_converted.pixel_format != PIXFMT_INVALID) {
-            width = ui_frame_converted.width;
-            height = ui_frame_converted.height;
-
-            final_frame = realloc(final_frame, width * height * 3);
-
-            ARGBToRAW(
-                ui_frame_converted.planes[0].buffer,
-                ui_frame_converted.planes[0].stride,
-                final_frame,
-                3 * width,
-                width,
-                height);
-        } else if (video_frame_converted.pixel_format != PIXFMT_INVALID) {
-            width = video_frame_converted.width;
-            height = video_frame_converted.height;
-
-            final_frame = realloc(final_frame, width * height * 3);
-
-            ARGBToRAW(
-                video_frame_converted.planes[0].buffer,
-                video_frame_converted.planes[0].stride,
-                final_frame,
-                3 * width,
-                width,
-                height);
-        } else {
-            got_frame = false;
-            WARN("No valid frame to send...");
-        }
-
-        uint64_t frame_processed = getticks_us();
-
-        if (this->dump_frames && got_frame && framecounter % 30 == 0) {
-            char filename[256];
-            snprintf(filename, sizeof(filename), "/tmp/hyperion-webos-dump.%03d.data", (int)(framecounter / 30) % 10);
-            FILE* fd = fopen(filename, "wb");
-            fwrite(final_frame, 3 * width * height, 1, fd);
-            fclose(fd);
-            INFO("Buffer dumped to: %s", filename);
-        }
-
-        if (this->callback != NULL) {
-            this->callback(this->callback_data, width, height, final_frame);
         }
 
         uint64_t frame_sent = getticks_us();
