@@ -211,11 +211,6 @@ int check_file_flag(const char* flag_path)
 
 int capture_acquire_frame(void* state, frame_info_t* frame)
 {
-    static int frame_count = 0;
-    static int recording_started = 0;
-    const int max_frames_to_save = 2; // Set this value according to the needed amount of data for analysis
-    const char* flag_path = "/tmp/start_recording.flag"; // Flag file to start recording
-    const char* log_file_path = "/tmp/captured_video_info.log"; // Log file for video stream information
     vtcapture_backend_state_t* self = (vtcapture_backend_state_t*)state;
     _LibVtCaptureBufferInfo buff;
     int ret = 0;
@@ -229,46 +224,6 @@ int capture_acquire_frame(void* state, frame_info_t* frame)
     if ((ret = vtCapture_currentCaptureBuffInfo(self->driver, &buff)) != 0) {
         ERR("vtCapture_currentCaptureBuffInfo() failed: %d", ret);
         return -1;
-    }
-
-    // Write video stream information to log file and save frame if recording has started
-    if (recording_started && frame_count < max_frames_to_save) {
-        FILE* log_file = fopen(log_file_path, "a");
-        if (log_file) {
-            fprintf(log_file, "Frame %d: Width: %d, Height: %d, Stride: %d\n", frame_count, self->width, self->height, self->stride);
-            fclose(log_file);
-        } else {
-            ERR("Failed to open log file for writing video info");
-        }
-
-        // Save frame
-        char filename[256];
-        snprintf(filename, sizeof(filename), "/tmp/captured_frame_%d.raw", frame_count);
-        FILE* file = fopen(filename, "wb");
-        if (file) {
-            fwrite(buff.start_addr0, 1, self->stride * self->height, file); // Save first plane
-            if (buff.start_addr1) {
-                fwrite(buff.start_addr1, 1, self->stride * self->height / 2, file); // Save second plane, if available
-            }
-            fclose(file);
-            INFO("Captured frame saved to %s", filename);
-        } else {
-            ERR("Failed to open file for writing captured frame");
-        }
-        frame_count++;
-
-        // Check if the frame limit is reached
-        if (frame_count >= max_frames_to_save) {
-            INFO("Maximum frames saved. Stopping recording.");
-            recording_started = 0; // Stop recording
-
-            // Remove the flag file
-            if (unlink(flag_path) == 0) {
-                INFO("Flag file %s removed successfully.", flag_path);
-            } else {
-                ERR("Failed to remove flag file %s", flag_path);
-            }
-        }
     }
 
     frame->pixel_format = PIXFMT_YUV420_SEMI_PLANAR; // ToDo: I guess?!
