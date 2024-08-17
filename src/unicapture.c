@@ -104,7 +104,7 @@ void* unicapture_vsync_handler(void* data)
     return NULL;
 }
 
-void* unicapture_run(void* data) 
+void* unicapture_run(void* data)
 {
     unicapture_state_t* this = (unicapture_state_t*)data;
     capture_backend_t* ui_capture = this->ui_capture;
