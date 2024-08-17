@@ -4,6 +4,7 @@
 
 #define LUT_TABLE_FILENAME_HDR "lut_lin_tables_hdr.3d"
 #define LUT_TABLE_FILENAME_DV "lut_lin_tables_dv.3d"
+#define LUT_TABLE_FILENAME_SDR "lut_lin_tables.3d"
 
 AmbientLightingDaemon daemon_flavor = DAEMON_NOT_SET;
 
@@ -242,6 +243,9 @@ int set_hdr_mode(char* host, ushort rpc_port, bool hdr_active, const char* hdr_t
             lut_filename = LUT_TABLE_FILENAME_HDR;
         }
         jobject_set(post_body, j_cstr_to_buffer("flatbuffers_user_lut_filename"), jstring_create(lut_filename));
+    } else {
+        INFO("set_hdr_mode: SDR mode");
+        lut_filename = LUT_TABLE_FILENAME_SDR;
     }
 
     if ((ret = send_rpc_message(host, rpc_port, post_body, &response_body_jval)) != 0) {
