@@ -27,7 +27,6 @@ void settings_init(settings_t* settings)
     settings->dump_frames = false;
 
     settings->use_direct_nv12 = false; // Use NV12 format for direct sending to HyperHDR
-    settings->capture_dump_location = 1;
 }
 
 int settings_load_json(settings_t* settings, jvalue_ref source)
@@ -84,11 +83,9 @@ int settings_load_json(settings_t* settings, jvalue_ref source)
     if ((value = jobject_get(source, j_cstr_to_buffer("nopowerstate"))) && jis_boolean(value))
         jboolean_get(value, &settings->no_powerstate);
 
-    if ((value = jobject_get(source, j_cstr_to_buffer("use_direct_nv12"))) && jis_boolean(value))
+    if ((value = jobject_get(source, j_cstr_to_buffer("use_direct_nv12"))) && jis_boolean(value)) {
         jboolean_get(value, &settings->use_direct_nv12);
-
-    if ((value = jobject_get(source, j_cstr_to_buffer("capture_dump_location"))) && jis_number(value))
-        jnumber_get_i32(value, &settings->capture_dump_location);
+    }
 
     return 0;
 }
@@ -117,7 +114,6 @@ int settings_save_json(settings_t* settings, jvalue_ref target)
     jobject_set(target, j_cstr_to_buffer("nopowerstate"), jboolean_create(settings->no_powerstate));
 
     jobject_set(target, j_cstr_to_buffer("use_direct_nv12"), jboolean_create(settings->use_direct_nv12));
-    jobject_set(target, j_cstr_to_buffer("capture_dump_location"), jnumber_create_i32(settings->capture_dump_location));
 
     return 0;
 }

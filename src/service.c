@@ -108,7 +108,6 @@ void service_init_backends(service_t* service)
     config.resolution_height = settings->height;
     config.fps = settings->fps;
     config.quirks = settings->quirks;
-    config.capture_dump_location = settings->capture_dump_location;
 
     char* ui_backends[] = { "libgm_backend.so", "libhalgal_backend.so", NULL };
     char* video_backends[] = { "libvtcapture_backend.so", "libdile_vt_backend.so", NULL };
