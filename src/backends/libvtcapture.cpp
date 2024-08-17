@@ -215,12 +215,6 @@ int capture_acquire_frame(void* state, frame_info_t* frame)
     _LibVtCaptureBufferInfo buff;
     int ret = 0;
 
-    // Check the flag file to start recording
-    if (!recording_started && check_file_flag(flag_path)) {
-        recording_started = 1;
-        INFO("Recording started by flag.");
-    }
-
     if ((ret = vtCapture_currentCaptureBuffInfo(self->driver, &buff)) != 0) {
         ERR("vtCapture_currentCaptureBuffInfo() failed: %d", ret);
         return -1;
