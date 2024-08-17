@@ -33,6 +33,7 @@ typedef struct _settings_t {
     bool no_powerstate;
 
     bool use_direct_nv12; // Use NV12 format for direct sending to HyperHDR
+    int capture_dump_location;
 } settings_t;
 
 void settings_init(settings_t*);
