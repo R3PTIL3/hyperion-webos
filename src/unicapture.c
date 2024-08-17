@@ -223,6 +223,7 @@ void* unicapture_run(void* data)
         int height = 0;
 
         if (!use_direct_send) {
+            // Blend frames and prepare for sending
             if (video_frame_converted.pixel_format != PIXFMT_INVALID && ui_frame_converted.pixel_format != PIXFMT_INVALID) {
                 width = video_frame_converted.width;
                 height = video_frame_converted.height;
@@ -287,6 +288,10 @@ void* unicapture_run(void* data)
             fwrite(final_frame, 3 * width * height, 1, fd);
             fclose(fd);
             INFO("Buffer dumped to: %s", filename);
+        }
+
+        if (this->callback != NULL) {
+            this->callback(this->callback_data, width, height, final_frame);
         }
 
         uint64_t frame_sent = getticks_us();
