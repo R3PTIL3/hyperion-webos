@@ -2,9 +2,6 @@
 #include <stdlib.h> // calloc()
 #include <unistd.h> // usleep()
 
-#include <stdio.h>
-#include <sys/stat.h>
-
 #include <fcntl.h>
 #include <sys/ioctl.h> //ioctl
 
@@ -55,7 +52,7 @@ int capture_init(cap_backend_config_t* config, void** state_p)
 
     // Sorry, no unlimited fps for you.
     self->props.frm = config->fps == 0 ? 60 : config->fps;
-    self->props.dump = 2; // HAS_QUIRK(config->quirks, QUIRK_ALTERNATIVE_DUMP_LOCATION) ? 1 : 2;
+    self->props.dump = HAS_QUIRK(config->quirks, QUIRK_ALTERNATIVE_DUMP_LOCATION) ? 1 : 2;
     self->props.loc.x = 0;
     self->props.loc.y = 0;
     self->props.reg.w = config->resolution_width;
@@ -203,12 +200,6 @@ int capture_terminate(void* state)
     return 0;
 }
 
-int check_file_flag(const char* flag_path)
-{
-    struct stat buffer;
-    return (stat(flag_path, &buffer) == 0);
-}
-
 int capture_acquire_frame(void* state, frame_info_t* frame)
 {
     vtcapture_backend_state_t* self = (vtcapture_backend_state_t*)state;
@@ -216,6 +207,7 @@ int capture_acquire_frame(void* state, frame_info_t* frame)
     int ret = 0;
 
     if ((ret = vtCapture_currentCaptureBuffInfo(self->driver, &buff)) != 0) {
+
         ERR("vtCapture_currentCaptureBuffInfo() failed: %d", ret);
         return -1;
     }
