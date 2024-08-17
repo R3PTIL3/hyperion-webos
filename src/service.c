@@ -87,6 +87,7 @@ int service_init(service_t* service, settings_t* settings)
     unicapture_init(&service->unicapture);
     service->unicapture.vsync = settings->vsync;
     service->unicapture.fps = settings->fps;
+    service->unicapture.use_direct_nv12 = settings->use_direct_nv12; // use_direct_nv12
     service->unicapture.callback = &service_feed_frame;
     service->unicapture.callback_data = (void*)service;
     service->unicapture.nv12_callback = &service_feed_frame_nv12; // NV12

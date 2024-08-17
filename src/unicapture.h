@@ -85,6 +85,7 @@ typedef struct _unicapture_state {
 
     bool vsync;
     uint32_t fps;
+    bool use_direct_nv12;
 
     bool running;
     pthread_t main_thread;
