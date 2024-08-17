@@ -290,8 +290,10 @@ void* unicapture_run(void* data)
             INFO("Buffer dumped to: %s", filename);
         }
 
-        if (this->callback != NULL) {
-            this->callback(this->callback_data, width, height, final_frame);
+        if (!use_direct_send) {
+            if (this->callback != NULL) {
+                this->callback(this->callback_data, width, height, final_frame);
+            }
         }
 
         uint64_t frame_sent = getticks_us();
