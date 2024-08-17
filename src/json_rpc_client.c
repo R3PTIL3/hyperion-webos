@@ -242,11 +242,12 @@ int set_hdr_mode(char* host, ushort rpc_port, bool hdr_active, const char* hdr_t
             WARN("set_hdr_mode: Invalid HDR type: %s", hdr_type);
             lut_filename = LUT_TABLE_FILENAME_HDR;
         }
-        jobject_set(post_body, j_cstr_to_buffer("flatbuffers_user_lut_filename"), jstring_create(lut_filename));
     } else {
         INFO("set_hdr_mode: SDR mode");
         lut_filename = LUT_TABLE_FILENAME_SDR;
     }
+
+    jobject_set(post_body, j_cstr_to_buffer("flatbuffers_user_lut_filename"), jstring_create(lut_filename));
 
     if ((ret = send_rpc_message(host, rpc_port, post_body, &response_body_jval)) != 0) {
         WARN("set_hdr_state: Failed to send RPC message, code: %d", ret);
