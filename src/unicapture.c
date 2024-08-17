@@ -181,6 +181,7 @@ void* unicapture_run(void* data)
         uint64_t frame_acquired = getticks_us();
 
         bool use_direct_send = video_frame.pixel_format == PIXFMT_YUV420_SEMI_PLANAR && this->use_direct_nv12;
+        INFO("NV12 use_direct_send: %d", use_direct_send);
 
         if (use_direct_send) {
             INFO("Sending NV12 frame without conversion: %dx%d, y_stride: %d, uv_stride: %d",
@@ -195,9 +196,11 @@ void* unicapture_run(void* data)
 
             if (is_converter_initialized) {
                 converter_release(&video_converter);
+                converter_release(&ui_converter);
                 is_converter_initialized = false;
             }
         } else {
+            INFO("Sending frame to converter...");
             if (!is_converter_initialized) {
                 converter_init(&ui_converter);
                 converter_init(&video_converter);
