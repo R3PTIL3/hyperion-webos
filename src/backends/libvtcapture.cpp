@@ -47,7 +47,7 @@ void print_video_format(int fd)
 
     INFO("VID_DBG Width: %d\n", fmt.fmt.pix.width);
     INFO("VID_DBG Height: %d\n", fmt.fmt.pix.height);
-    INFO("VID_DBG Pixel Format: %.4s\n", (char *)&fmt.fmt.pix.pixelformat);
+    INFO("VID_DBG Pixel Format: %.4s\n", (char*)&fmt.fmt.pix.pixelformat);
     INFO("VID_DBG Field: %d\n", fmt.fmt.pix.field);
 }
 
@@ -61,7 +61,7 @@ void list_supported_formats(int fd)
     INFO("VID_DBG Supported video formats:\n");
 
     while (ioctl(fd, VIDIOC_ENUM_FMT, &fmt) == 0) {
-        INFO("VID_DBG Format: %s (%.4s)\n", fmt.description, (char *)&fmt.pixelformat);
+        INFO("VID_DBG Format: %s (%.4s)\n", fmt.description, (char*)&fmt.pixelformat);
         fmt.index++;
     }
 
