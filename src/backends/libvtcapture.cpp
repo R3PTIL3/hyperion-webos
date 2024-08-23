@@ -34,7 +34,8 @@ typedef struct _vtcapture_backend_state {
 
 int capture_terminate(void* state);
 
-void print_video_format(int fd) {
+void print_video_format(int fd)
+{
     struct v4l2_format fmt;
     memset(&fmt, 0, sizeof(fmt));
     fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -50,7 +51,8 @@ void print_video_format(int fd) {
     INFO("VID_DBG Field: %d\n", fmt.fmt.pix.field);
 }
 
-void list_v4l2_devices() {
+void list_v4l2_devices()
+{
     char device[20];
     int fd;
     for (int i = 0; i < 10; i++) {
