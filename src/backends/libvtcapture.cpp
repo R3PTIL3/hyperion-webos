@@ -12,6 +12,10 @@
 extern "C" {
 #include <vtcapture/vtCaptureApi_c.h>
 
+#include <linux/videodev2.h>
+#include <stdio.h>
+#include <string.h>
+
 #define FCI_MAGIC 'Z'
 #define FC_K6HP _IO(FCI_MAGIC, 0)
 
@@ -35,6 +39,8 @@ int capture_init(cap_backend_config_t* config, void** state_p)
     int ret = 0;
 
     INFO("Starting vtcapture initialization.");
+
+    list_v4l2_devices();
 
     vtcapture_backend_state_t* self = (vtcapture_backend_state_t*)calloc(1, sizeof(vtcapture_backend_state_t));
 
@@ -286,5 +292,52 @@ int capture_wait(void* state)
     self->curr_buff = self->buff.start_addr0;
 
     return 0;
+}
+
+void print_video_format(int fd) {
+    struct v4l2_format fmt;
+    memset(&fmt, 0, sizeof(fmt));
+    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+    if (ioctl(fd, VIDIOC_G_FMT, &fmt) == -1) {
+        perror("VIDIOC_G_FMT");
+        return;
+    }
+
+    INFO("VID_DBG Width: %d\n", fmt.fmt.pix.width);
+    INFO("VID_DBG Height: %d\n", fmt.fmt.pix.height);
+    INFO("VID_DBG Pixel Format: %d\n", fmt.fmt.pix.pixelformat);
+    INFO("VID_DBG Field: %d\n", fmt.fmt.pix.field);
+}
+
+void list_v4l2_devices() {
+    char device[20];
+    int fd;
+    for (int i = 0; i < 10; i++) {
+        snprintf(device, sizeof(device), "/dev/video%d", i);
+        fd = open(device, O_RDWR);
+        if (fd == -1) {
+            continue;
+        }
+
+        INFO("VID_DBG Device: %s\n", device);
+
+        struct v4l2_capability cap;
+        if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == -1) {
+            perror("VIDIOC_QUERYCAP");
+            close(fd);
+            continue;
+        }
+
+        INFO("VID_DBG Driver: %s\n", cap.driver);
+        INFO("VID_DBG Card: %s\n", cap.card);
+        INFO("VID_DBG Bus Info: %s\n", cap.bus_info);
+        INFO("VID_DBG Version: %d.%d\n", (cap.version >> 16) & 0xFF, (cap.version >> 24) & 0xFF);
+        INFO("VID_DBG Capabilities: %x\n", cap.capabilities);
+
+        print_video_format(fd);
+
+        close(fd);
+    }
 }
 }
