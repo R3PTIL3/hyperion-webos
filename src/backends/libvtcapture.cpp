@@ -41,23 +41,44 @@ void print_video_format(int fd)
     fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
     if (ioctl(fd, VIDIOC_G_FMT, &fmt) == -1) {
-        perror("VIDIOC_G_FMT");
+        ERR("VIDIOC_G_FMT");
         return;
     }
 
     INFO("VID_DBG Width: %d\n", fmt.fmt.pix.width);
     INFO("VID_DBG Height: %d\n", fmt.fmt.pix.height);
-    INFO("VID_DBG Pixel Format: %d\n", fmt.fmt.pix.pixelformat);
+    INFO("VID_DBG Pixel Format: %.4s\n", (char *)&fmt.fmt.pix.pixelformat);
     INFO("VID_DBG Field: %d\n", fmt.fmt.pix.field);
+}
+
+void list_supported_formats(int fd)
+{
+    struct v4l2_fmtdesc fmt;
+    memset(&fmt, 0, sizeof(fmt));
+    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    fmt.index = 0;
+
+    INFO("VID_DBG Supported video formats:\n");
+
+    while (ioctl(fd, VIDIOC_ENUM_FMT, &fmt) == 0) {
+        INFO("VID_DBG Format: %s (%.4s)\n", fmt.description, (char *)&fmt.pixelformat);
+        fmt.index++;
+    }
+
+    if (fmt.index == 0) {
+        INFO("VID_DBG No video formats found.\n");
+    } else if (errno != EINVAL) {
+        ERR("VIDIOC_ENUM_FMT");
+    }
 }
 
 void list_v4l2_devices()
 {
     char device[20];
     int fd;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 256; i++) {
         snprintf(device, sizeof(device), "/dev/video%d", i);
-        fd = open(device, O_RDWR);
+        fd = open(device, O_RDONLY);
         if (fd == -1) {
             continue;
         }
@@ -66,7 +87,7 @@ void list_v4l2_devices()
 
         struct v4l2_capability cap;
         if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == -1) {
-            perror("VIDIOC_QUERYCAP");
+            ERR("VIDIOC_QUERYCAP");
             close(fd);
             continue;
         }
@@ -78,6 +99,8 @@ void list_v4l2_devices()
         INFO("VID_DBG Capabilities: %x\n", cap.capabilities);
 
         print_video_format(fd);
+
+        list_supported_formats(fd);
 
         close(fd);
     }
