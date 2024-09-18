@@ -180,7 +180,10 @@ void* unicapture_run(void* data)
 
         uint64_t frame_acquired = getticks_us();
 
-        bool use_direct_send = video_frame.pixel_format == PIXFMT_YUV420_SEMI_PLANAR && this->use_direct_nv12;
+        bool use_direct_send = 
+            (video_frame.pixel_format == PIXFMT_YUV420_SEMI_PLANAR || 
+            video_frame.pixel_format == PIXFMT_YUV422_SEMI_PLANAR) && 
+            this->use_direct_nv12;
         INFO("NV12 use_direct_send: %d, pixel_format: %d", use_direct_send, video_frame.pixel_format);
 
         if (use_direct_send) {
